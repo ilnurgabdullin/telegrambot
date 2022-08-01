@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}
+Create train
+{% endblock %}
+{% block body %}
+    {% if name %}
+        <h1>Main body {{ name }}</h1>
+    {% endif %}
+    <form method="post">
+        <p>
+            <label for="date">Date</label>
+            <input type="text" name="date">
+	    </p>
+        <p>
+            <label for="time">Time</label>
+            <input type="text" name="time">
+	    </p>
+        <p>
+            <label for="type">Type</label>
+            <input type="text" name="type">
+	    </p>
+        <p>
+            <label for="person">Person</label>
+            <input type="text" name="person">
+	    </p>
+        <p>
+            <label for="rezerve">Rezerve</label>
+            <input type="text" name="rezerve">
+	    </p>
+        <p>
+            <input type="submit">
+        </p>
+    </form>
+{% endblock %}
