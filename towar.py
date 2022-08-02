@@ -223,9 +223,18 @@ def delete_traini(date: str, time: str, type: str = None) -> None:
                     cursor.execute('DELETE FROM training WHERE trainid=%s', (i[0],))
 
 
+def get_dialog() -> dict:
+    with psycopg2.connect(**connect_args) as connection:
+        with connection.cursor() as cursor:
+            dialog = {}
+            cursor.execute('''SELECT * FROM dialogue;''')
+            for phrase in cursor.fetchall():
+                dialog[phrase[1]] = phrase[2]
+            return dialog
+
 
 if __name__ == '__main__':
     from pprint import pprint
     # delete_binded_time(8)
-    print(get_name(8))
+    print(get_dialog())
     # bind_train('24.07.2022', '4:20', 644356793)

@@ -10,6 +10,7 @@ from keyboards import client_keyboards
 from aiogram_calendar import dialog_cal_callback, DialogCalendar, SimpleCalendar, simple_cal_callback
 from aiogram.dispatcher.filters import Text
 
+dialod = towar.get_dialog()
 
 
 class FSMClient(StatesGroup):
@@ -37,7 +38,7 @@ class FSMClient(StatesGroup):
 async def command_start(message: types.Message):
     if towar.is_exists(message.from_user.id) == 1: # проверяем есть клиент в базе
         await FSMClient.main_client.set()
-        await message.answer(f'Привет друг, что будем делать?\nУ вас ещё {towar.chek_aboniment(message.from_user.id)} занятий',
+        await message.answer(dialod['start'].format(towar.chek_aboniment(message.from_user.id)),
                              reply_markup=client_keyboards.main_menu_client
                              )
     elif towar.is_exists(message.from_user.id) == 0:
