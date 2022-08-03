@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 import psycopg2
 
 import towar
@@ -46,18 +46,22 @@ def create_train():
 
 
 @app.route('/delete_train',  methods=['post', 'get'])
-def dalete_train():
+def delete_train():
+    return render_template('delete_train.html',trains = towar.look_all_trains())
+
+
+@app.route('/delete_train/<string:date>/<string:time>')
+def delete_train_by_id(date: str, time: str):
+    towar.delete_trainig(date,time)
+    return redirect('/')
+
+
+@app.route('/edit_dialog',  methods=['post', 'get'])
+def edit_dialog():
     if request.method == 'POST':
-        date = request.form.get('date')  # запрос к данным формы
-        time = request.form.get('time')
-        type = request.form.get('type')
-
-        try:
-            towar.delete_trainig(date,time)
-        except Exception as ex:
-            print(ex)
-    return render_template('delete_train.html')
-
+        for i in request.form:
+            towar.set_dialog(request.form.get(i), i)
+    return render_template('edit_dialog.html',phrases = towar.get_dialog())
 
 
 if __name__ == '__main__':

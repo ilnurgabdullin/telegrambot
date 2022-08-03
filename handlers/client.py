@@ -38,13 +38,13 @@ class FSMClient(StatesGroup):
 async def command_start(message: types.Message):
     if towar.is_exists(message.from_user.id) == 1: # проверяем есть клиент в базе
         await FSMClient.main_client.set()
-        if '{}' in dialod.get('start'):
-            await message.answer(dialod.get('start','Hello {}').format(towar.chek_aboniment(message.from_user.id)),
+        if dialod.get('start').count('{}') == 1:
+            await message.answer(('Hello {}' if dialod.get('start') == '' else dialod.get('start')).format(towar.chek_aboniment(message.from_user.id)),
                              reply_markup=client_keyboards.main_menu_client
                              )
         else:
             await message.answer(
-                dialod.get('start', f'Hello {towar.chek_aboniment(message.from_user.id)}'),
+                text = dialod.get('start') if dialod.get('start') != '' else f'Hello {towar.chek_aboniment(message.from_user.id)}',
                 reply_markup=client_keyboards.main_menu_client
                 )
     elif towar.is_exists(message.from_user.id) == 0:
@@ -61,14 +61,16 @@ async def wait_for_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data: # записываем имя нового пользователя в оперативную память
         data['name'] = message.text.replace(' ', '_')
         data['tgid'] = message.from_user.id
-    await message.answer(dialod.get('ask_gender','Шаг 2/4 \nУкажите свой пол'), reply_markup=client_keyboards.choose_gender_kb)
+    await message.answer(dialod.get('ask_gender','Шаг 2/4 \nУкажите свой пол'),
+                         reply_markup=client_keyboards.choose_gender_kb)
     await FSMClient.register_gender.set()
 
 
 async def wait_for_gender(message: types.Message, state: FSMContext):
     async with state.proxy() as data: # сохраняем пол в оперативку
         data['gender'] = message.text.replace(' ', '_')
-    await message.answer(dialod.get('ask_birthday','Шаг 3/4 \nУкажите свой день рождения'), reply_markup=await DialogCalendar().start_calendar())
+    await message.answer(dialod.get('ask_birthday','Шаг 3/4 \nУкажите свой день рождения'),
+                         reply_markup=await DialogCalendar().start_calendar())
     await FSMClient.register_date.set()
 
 
@@ -190,9 +192,17 @@ async def main_menu(callback_query: CallbackQuery, state: FSMContext):
         await bot.send_message(chat_id=callback_query.from_user.id, text='Вам начисленно '+str(colwo)+' занятий')
         towar.update_tiket(tgid=callback_query.from_user.id, kolvo=colwo)
         towar.write_transaktion(tgid=callback_query.from_user.id, kolvo=colwo)
-    await callback_query.message.answer(f'Привет друг, что будем делать?\nУ вас ещё {towar.chek_aboniment(callback_query.from_user.id)} занятий',
-                                        reply_markup=client_keyboards.main_menu_client
-                                        )
+
+    if '{}' in dialod.get('start'):
+        await callback_query.message.answer(dialod.get('start', 'Hello {}').format(towar.chek_aboniment(callback_query.from_user.id)),
+                             reply_markup=client_keyboards.main_menu_client
+                             )
+    else:
+        await callback_query.message.answer(
+            dialod.get('start', f'Hello {towar.chek_aboniment(callback_query.from_user.id)}'),
+            reply_markup=client_keyboards.main_menu_client
+        )
+
     await FSMClient.main_client.set()
 
 
@@ -263,17 +273,17 @@ async def bind_time_client(callback_query: CallbackQuery):
     elif 'list' in callback_query.data:
         data = towar.look_free_trains(callback_query.data[4:])
         data_all = towar.look_all_trains(callback_query.data[4:])
-        # print(data)
-        reply = f'Записи на сегодня {callback_query.data[4:]}:\n'
+        reply = f'Записи на сегодня {callback_query.data[4:]}:'
         times = []
-        for i in data_all:
-            name = towar.get_name(int(i[0]))
-            if name != '':
-                if not(i[2] in times):
-                    times.append(i[2])
-                    reply += str(i[2]) + '\n' + name + '\n'
-                else:
-                    reply += name + '\n'
+        for t in data_all:
+            for i in t[2]:
+                name = towar.take_name_by_id(int(*i))
+                if name != '':
+                    if not(t[1] in times):
+                        times.append(t[1])
+                        reply +='\n' + str(t[1]) +' '+ towar.take_type_by_time(callback_query.data[4:],str(t[1])) + ':\n' + name + '\n'
+                    else:
+                        reply += name + '\n'
         keybord = client_keyboards.create_choose_time_kb(data,False)
         await bot.send_message(
                                chat_id=callback_query.from_user.id,
@@ -311,11 +321,7 @@ async def cansel_ticket(callback_query: CallbackQuery):
                                             )
     await FSMClient.main_client.set()
     await bot.delete_message(callback_query.from_user.id,callback_query.message.message_id)
-    # await bot.edit_message_reply_markup(
-    #     chat_id=callback_query.from_user.id,
-    #     message_id=callback_query.message.message_id,
-    #     reply_markup=None
-    # )
+
 # =================>>>>>>>>>> КУПИТЬ АБОНИМЕНТ <<<<<<<<<<<<<<========================
 # =================>>>>>>>>>> КУПИТЬ АБОНИМЕНТ <<<<<<<<<<<<<<========================
 

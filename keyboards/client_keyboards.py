@@ -74,7 +74,6 @@ def cancel_ticket_kb(data: list):
     else:
         cancel_ticket = InlineKeyboardMarkup(row_width=1)
         for i in data:
-            print(i)
             train_time = datetime.datetime.strptime(str(i[1]) + ' ' + str(i[2]), '%d.%m.%Y %H:%M')
             now_time = datetime.datetime.now()
             if train_time > now_time:

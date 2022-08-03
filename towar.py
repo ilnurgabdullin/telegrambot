@@ -42,7 +42,7 @@ def is_exists(tgid: int) -> int: # Проверяет есть ли позьзо
         with connection.cursor() as cursor:
             cursor.execute('SELECT * FROM users WHERE tgid=%s;',(tgid,))
             info = cursor.fetchone()
-            print(info)
+
             if info is None:
                 return 0
             elif not(info[7]):
@@ -66,7 +66,7 @@ def take_name_by_id(tgid: int) -> str: # возвращает имя польз�
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
             cursor.execute("""SELECT name FROM users WHERE tgid = %s;""", (tgid,))
-            x = cursor.fetchone()[0]
+            x = str(cursor.fetchone()[0]).replace('_',' ')
             return x
 
 
@@ -124,7 +124,7 @@ def bind_train(date: str, time: str, tgid: int) -> str:
         with connection.cursor() as cursor:
             cursor.execute('SELECT * FROM training RIGHT JOIN used_slots ON used_slots.trainid=training.trainid WHERE date=%s AND time=%s;',(date,time))
             for i in cursor.fetchall():
-                if i[6] == tgid:
+                if i[7] == tgid:
                     return 'Вы уже записаны на тренировку в это время'
             cursor.execute('SELECT * FROM training WHERE binded=False AND date=%s AND time=%s ORDER BY priority;',(date,time,))
             try:
@@ -186,9 +186,9 @@ def get_name(trainid: int) -> str:
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
             cursor.execute('SELECT userid FROM used_slots WHERE trainid=%s;',(trainid,))
-            print(trainid)
+
             id = cursor.fetchone()
-            print(id)
+
             if type(id) != type(None):
                 name = take_name_by_id(*id)
                 return name
@@ -199,29 +199,41 @@ def look_all_trains(date: str = None) -> list:
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
             if date is None:
-                cursor.execute('SELECT * FROM training')
+                cursor.execute('SELECT * FROM training WHERE passed=False')
             else:
-                cursor.execute('SELECT * FROM training WHERE date=%s;',(date,))
-            return cursor.fetchall()
+                cursor.execute('SELECT * FROM training WHERE date=%s AND passed=False;',(date,))
+            trains = []
+            for i in cursor.fetchall():
+                cursor.execute('''SELECT userid FROM used_slots WHERE trainid=%s''',(i[0],))
+                ids = cursor.fetchall()
+                x = (i[1], i[2], ids)
+                if x not in trains:
+                    trains.append(x)
+            return trains
+
+
+def take_type_by_time(date: str, time: str):
+    with psycopg2.connect(**connect_args) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute('''SELECT type FROM training WHERE date=%s AND time=%s;''', (date,time))
+            return str(*cursor.fetchone())
 
 
 def delete_trainig(date: str, time: str) -> None:
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
-            if type is None:
-                cursor.execute('''
+            cursor.execute('''
                     SELECT * FROM training
                     LEFT JOIN used_slots
                     ON training.trainid=used_slots.trainid
                     WHERE date=%s AND time=%s;
                     ''',(date,time)
                     )
-                for i in cursor.fetchall():
-                    if not (i[6] is None):
-                        update_tiket(i[6],1)
-                        cursor.execute('DELETE FROM used_slots WHERE trainid=%s',(i[0],))
-                    cursor.execute('DELETE FROM training WHERE trainid=%s', (i[0],))
-
+            for i in cursor.fetchall():
+                if not (i[7] is None):
+                    update_tiket(i[7],1)
+                    cursor.execute('DELETE FROM used_slots WHERE trainid=%s',(i[0],))
+                cursor.execute('DELETE FROM training WHERE date=%s AND time=%s;', (date,time))
 
 
 def get_dialog() -> dict:
@@ -234,8 +246,10 @@ def get_dialog() -> dict:
             return dialog
 
 
+def set_dialog(phrase: str,pattern: str):
+    with psycopg2.connect(**connect_args) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute('''UPDATE dialogue SET phrase = %s WHERE pattern = %s''',(phrase, pattern))
+
 if __name__ == '__main__':
-    from pprint import pprint
-    # delete_binded_time(8)
-    print(get_dialog())
-    # bind_train('24.07.2022', '4:20', 644356793)
+    print(take_type_by_time('04.08.2022','12:00'))
