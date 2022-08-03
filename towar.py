@@ -205,7 +205,7 @@ def look_all_trains(date: str = None) -> list:
             return cursor.fetchall()
 
 
-def delete_traini(date: str, time: str, type: str = None) -> None:
+def delete_trainig(date: str, time: str) -> None:
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
             if type is None:
@@ -221,6 +221,7 @@ def delete_traini(date: str, time: str, type: str = None) -> None:
                         update_tiket(i[6],1)
                         cursor.execute('DELETE FROM used_slots WHERE trainid=%s',(i[0],))
                     cursor.execute('DELETE FROM training WHERE trainid=%s', (i[0],))
+
 
 
 def get_dialog() -> dict:

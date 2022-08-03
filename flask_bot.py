@@ -45,19 +45,18 @@ def create_train():
     return render_template('create_train.html')
 
 
-@app.route('/create_train',  methods=['post', 'get'])
+@app.route('/delete_train',  methods=['post', 'get'])
 def dalete_train():
     if request.method == 'POST':
         date = request.form.get('date')  # запрос к данным формы
         time = request.form.get('time')
         type = request.form.get('type')
-        person = request.form.get('person')
-        rezerve = request.form.get('rezerve')
+
         try:
-            towar.create_new_training(date,time,type,int(person),int(rezerve))
+            towar.delete_trainig(date,time)
         except Exception as ex:
             print(ex)
-    return render_template('create_train.html')
+    return render_template('delete_train.html')
 
 
 

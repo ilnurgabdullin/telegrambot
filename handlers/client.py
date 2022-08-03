@@ -38,31 +38,37 @@ class FSMClient(StatesGroup):
 async def command_start(message: types.Message):
     if towar.is_exists(message.from_user.id) == 1: # проверяем есть клиент в базе
         await FSMClient.main_client.set()
-        await message.answer(dialod['start'].format(towar.chek_aboniment(message.from_user.id)),
+        if '{}' in dialod.get('start'):
+            await message.answer(dialod.get('start','Hello {}').format(towar.chek_aboniment(message.from_user.id)),
                              reply_markup=client_keyboards.main_menu_client
                              )
+        else:
+            await message.answer(
+                dialod.get('start', f'Hello {towar.chek_aboniment(message.from_user.id)}'),
+                reply_markup=client_keyboards.main_menu_client
+                )
     elif towar.is_exists(message.from_user.id) == 0:
         await FSMClient.register_name.set()
         photo = open('brig.png', 'rb')
-        await bot.send_photo(chat_id=message.from_user.id,photo = photo, caption='Зарегистрируйся чтобы стать частью Бригады')
-        await message.answer('Шаг 1/4 \nНапишите Фамилию Имя Отчество (полностью)')
+        if not (dialod.get('photo_caption') is None):
+            await bot.send_photo(chat_id=message.from_user.id,photo = photo, caption=dialod.get('photo_caption'))
+        await message.answer(dialod.get('ask_name','Шаг 1/4 \nНапишите Фамилию Имя Отчество (полностью)'))
     else:
-        await message.answer('Ваш аккаунт ещё не прошёл модерацию, это произойдёт в близжайшее время, извиняемся за задержку')
+        await message.answer(dialod.get('not_moder','Ваш аккаунт ещё не прошёл модерацию, это произойдёт в близжайшее время, извиняемся за задержку'))
 
 
 async def wait_for_name(message: types.Message, state: FSMContext):
-    async with state.proxy() as data: # записываем имя нового пользователя в оперативную память, сохраняем только после
-                                      # модерации администратором
+    async with state.proxy() as data: # записываем имя нового пользователя в оперативную память
         data['name'] = message.text.replace(' ', '_')
         data['tgid'] = message.from_user.id
-    await message.answer('Шаг 2/4 \nУкажите свой пол', reply_markup=client_keyboards.choose_gender_kb)
+    await message.answer(dialod.get('ask_gender','Шаг 2/4 \nУкажите свой пол'), reply_markup=client_keyboards.choose_gender_kb)
     await FSMClient.register_gender.set()
 
 
 async def wait_for_gender(message: types.Message, state: FSMContext):
     async with state.proxy() as data: # сохраняем пол в оперативку
         data['gender'] = message.text.replace(' ', '_')
-    await message.answer('Шаг 3/4 \nУкажите свой день рождения', reply_markup=await DialogCalendar().start_calendar())
+    await message.answer(dialod.get('ask_birthday','Шаг 3/4 \nУкажите свой день рождения'), reply_markup=await DialogCalendar().start_calendar())
     await FSMClient.register_date.set()
 
 
@@ -116,10 +122,11 @@ async def process_dialog_calendar(callback_query: CallbackQuery, callback_data: 
     selected, date = await DialogCalendar().process_selection(callback_query, callback_data)
     if selected:
         async with state.proxy() as data:
-            data['date'] = date.strftime("%d/%m/%Y")
+            data['date'] = date.strftime("%d.%m.%Y")
         await callback_query.message.delete()
         await callback_query.message.answer(
-            'Шаг 4/4 \nУкажите свой номер телефона',reply_markup=client_keyboards.phone_kb)
+            dialod.get('ask_phone', 'Шаг 4/4 \nУкажите свой номер телефона'),
+            reply_markup=client_keyboards.phone_kb)
         await FSMClient.register_phone.set()
 
 

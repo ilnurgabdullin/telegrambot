@@ -14,12 +14,12 @@ def get_totp_token(secret):
     return get_hotp_token(secret, intervals_no=int(time.time())//30)
 
 import qrcode
+
 st = 'otpauth://totp/{name}?secret={code}'.format(name = 'Ilnur',code = 'MZXW633PN5XW6MZV')
 img = qrcode.make(st)
 type(img)  # qrcode.image.pil.PilImage
 img.save("some_file.png")
-import os
-os.startfile("some_file.png")
+
 
 
 secret = 'MZXW633PN5XW6MZV'
