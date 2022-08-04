@@ -82,21 +82,17 @@ async def wait_for_phone(message: types.Message, state: FSMContext):
         phone = message.text.replace(' ', '_')
     async with state.proxy() as data:
         data['phone'] = phone
-        # await message.edit_reply_markup(reply_markup=None)
         await message.answer(
                             'Уточним',
                             reply_markup=ReplyKeyboardRemove())
-        await message.answer('Всё верно?\nВас зовут {}\nВы родились {}\nВаш номер телефона {}\n'.format(data.get('name').replace('_',' '),data.get('date'),data.get('phone')),
+        if ('{name}' in dialod.get('chek_data')) and ('{phone}' in dialod.get('chek_data')) and ('{bithday}' in dialod.get('chek_data')):
+            await message.answer(dialod.get('chek_data').format(name = data.get('name').replace('_', ' '),bithday = data.get('date'),phone = data.get('phone')),
                              reply_markup=client_keyboards.ok_reg_kb)
+        else:
+            await message.answer('Всё верно?\nВас зовут {}\nВы родились {}\nВаш номер телефона {}\n'.format(
+                data.get('name').replace('_', ' '), data.get('date'), data.get('phone')),
+                                 reply_markup=client_keyboards.ok_reg_kb)
         await FSMClient.register_ok.set()
-
-
-async def back(message: types.Message,state:FSMContext):
-    await state.reset_state()
-    await state.reset_data()
-    await message.answer("Очищено. Чтобы посмотреть каталог нажми на кнопки внизу",
-                         reply_markup=client_keyboards.main_menu_client)
-    await FSMClient.main_client.set()
 
 
 @dp.callback_query_handler(state=FSMClient.register_ok)
@@ -226,6 +222,7 @@ async def process_simple_calendar(callback_query: CallbackQuery, callback_data: 
             f'You selected {date.strftime("%d.%m.%Y")} на этот день нет свободного времени',
                 reply_markup=await SimpleCalendar().start_calendar()
         )
+
         else:
             await callback_query.message.answer(
                 f'You selected {date.strftime("%d.%m.%Y")}',
@@ -271,6 +268,7 @@ async def bind_time_client(callback_query: CallbackQuery):
             reply_markup=None
         )
     elif 'list' in callback_query.data:
+        await callback_query.answer()
         data = towar.look_free_trains(callback_query.data[4:])
         data_all = towar.look_all_trains(callback_query.data[4:])
         reply = f'Записи на сегодня {callback_query.data[4:]}:'
@@ -321,6 +319,17 @@ async def cansel_ticket(callback_query: CallbackQuery):
                                             )
     await FSMClient.main_client.set()
     await bot.delete_message(callback_query.from_user.id,callback_query.message.message_id)
+
+
+@dp.callback_query_handler(state='*')
+async def back_button(callback_query: types.CallbackQuery):
+    await callback_query.message.answer(
+        f'Привет друг, что будем делать?\nУ вас ещё {towar.chek_aboniment(callback_query.from_user.id)} занятий',
+        reply_markup=client_keyboards.main_menu_client
+        )
+    await FSMClient.main_client.set()
+    await bot.delete_message(callback_query.from_user.id, callback_query.message.message_id)
+
 
 # =================>>>>>>>>>> КУПИТЬ АБОНИМЕНТ <<<<<<<<<<<<<<========================
 # =================>>>>>>>>>> КУПИТЬ АБОНИМЕНТ <<<<<<<<<<<<<<========================

@@ -99,6 +99,14 @@ def view_new_user() -> list: # возваращает список немоде�
             return data
 
 
+def moder_user_by_tgid(tgid: int, remove: bool = False):
+    with psycopg2.connect(**connect_args) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("""UPDATE users SET moder=True WHERE tgid = %s""", (tgid,))
+            if remove:
+                cursor.execute('''DELETE FROM users WHERE tgid= %s''',(tgid,))
+
+
 def create_new_training(date: str, time: str, type: str, person: int, rezerve: int = 0 ) -> None:
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
@@ -195,11 +203,13 @@ def get_name(trainid: int) -> str:
             return ''
 
 
-def comp(a:list,b:tuple) -> bool:
+def comp(a:list, b:list) -> bool:
     for i in a:
         if i[:1] == b[:1]:
+            i[2].extend (b[2])
             return False
     return True
+
 
 def look_all_trains(date: str = None) -> list:
     with psycopg2.connect(**connect_args) as connection:
@@ -211,8 +221,8 @@ def look_all_trains(date: str = None) -> list:
             trains = []
             for i in cursor.fetchall():
                 cursor.execute('''SELECT userid FROM used_slots WHERE trainid=%s''',(i[0],))
-                ids = cursor.fetchall()
-                x = (i[1], i[2], ids)
+                ids = list(cursor.fetchall())
+                x = [i[1], i[2], ids]
                 if comp(trains,x):
                     trains.append(x)
             return trains

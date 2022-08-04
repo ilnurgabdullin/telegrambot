@@ -4,4 +4,9 @@ About
 {% endblock %}
 {% block body %}
 <h1>About body</h1>
+{% for us in users %}
+    <h3>{{ us }}</h3>
+    <a href="/about/{{ us[4] }}">Moder</a>
+    <a href="/delete/{{ us[4] }}">Delete</a>
+{% endfor %}
 {% endblock %}
