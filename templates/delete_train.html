@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}
+delete_train
+{% endblock %}
+{% block body %}
+
+
+        {% for tr in trains %}
+        <p>
+            <a href="delete_train/{{tr[0]}}/{{tr[1]}}">{{ tr[1] }}--{{ tr[0] }}</a>
+        </p>
+        {% endfor %}
+{% endblock %}
