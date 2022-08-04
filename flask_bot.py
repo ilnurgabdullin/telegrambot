@@ -52,7 +52,11 @@ def delete_train():
 
 @app.route('/delete_train/<string:date>/<string:time>')
 def delete_train_by_id(date: str, time: str):
-    towar.delete_trainig(date,time)
+    import telebot
+    bot = telebot.TeleBot(token='')
+    for i in towar.delete_trainig(date,time):
+        bot.send_message(i,f'Тренировка {date} {time} была отменена')
+    del bot
     return redirect('/')
 
 
