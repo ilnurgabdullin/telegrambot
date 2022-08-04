@@ -195,6 +195,12 @@ def get_name(trainid: int) -> str:
             return ''
 
 
+def comp(a:list,b:tuple) -> bool:
+    for i in a:
+        if i[:1] == b[:1]:
+            return False
+    return True
+
 def look_all_trains(date: str = None) -> list:
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
@@ -207,7 +213,7 @@ def look_all_trains(date: str = None) -> list:
                 cursor.execute('''SELECT userid FROM used_slots WHERE trainid=%s''',(i[0],))
                 ids = cursor.fetchall()
                 x = (i[1], i[2], ids)
-                if x not in trains:
+                if comp(trains,x):
                     trains.append(x)
             return trains
 
@@ -219,7 +225,7 @@ def take_type_by_time(date: str, time: str):
             return str(*cursor.fetchone())
 
 
-def delete_trainig(date: str, time: str) -> None:
+def delete_trainig(date: str, time: str) -> tuple:
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
             cursor.execute('''
@@ -229,11 +235,14 @@ def delete_trainig(date: str, time: str) -> None:
                     WHERE date=%s AND time=%s;
                     ''',(date,time)
                     )
+            users = []
             for i in cursor.fetchall():
                 if not (i[7] is None):
                     update_tiket(i[7],1)
+                    users.append(i[7])
                     cursor.execute('DELETE FROM used_slots WHERE trainid=%s',(i[0],))
-                cursor.execute('DELETE FROM training WHERE date=%s AND time=%s;', (date,time))
+            cursor.execute('DELETE FROM training WHERE date=%s AND time=%s;', (date,time))
+            return tuple(users)
 
 
 def get_dialog() -> dict:

@@ -192,7 +192,7 @@ async def main_menu(callback_query: CallbackQuery, state: FSMContext):
         await bot.send_message(chat_id=callback_query.from_user.id, text='Вам начисленно '+str(colwo)+' занятий')
         towar.update_tiket(tgid=callback_query.from_user.id, kolvo=colwo)
         towar.write_transaktion(tgid=callback_query.from_user.id, kolvo=colwo)
-
+    dialod = towar.get_dialog()
     if '{}' in dialod.get('start'):
         await callback_query.message.answer(dialod.get('start', 'Hello {}').format(towar.chek_aboniment(callback_query.from_user.id)),
                              reply_markup=client_keyboards.main_menu_client
