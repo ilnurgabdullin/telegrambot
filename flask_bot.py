@@ -27,7 +27,22 @@ def index():
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    d = towar.view_new_user()
+    if len(d) == 0:
+        return redirect('/')
+    return render_template('about.html', users = towar.view_new_user())
+
+
+@app.route('/about/<int:tgid>')
+def moder_user(tgid: int):
+    towar.moder_user_by_tgid(tgid)
+    return redirect('/about')
+
+
+@app.route('/delete/<int:tgid>')
+def delete_user(tgid: int):
+    towar.moder_user_by_tgid(tgid,True)
+    return redirect('/about')
 
 
 @app.route('/create_train',  methods=['post', 'get'])
