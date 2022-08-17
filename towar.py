@@ -1,7 +1,10 @@
+import time
 import psycopg2
 import datetime
 from psycopg2 import Error
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from threading import Thread
+
 
 connect_args = {
     'user':'postgres',
@@ -10,6 +13,22 @@ connect_args = {
     'port':"5432",
     'dbname':'first'
 }
+
+
+def passed_trains(): # добавить возможность отмены отмены за несколько часов до тренировки
+    while True:
+        with psycopg2.connect(**connect_args) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute('''SELECT * FROM training WHERE passed=False''')
+                for tr in cursor.fetchall():
+                    train_time = datetime.datetime.strptime(str(tr[1]) + ' ' + str(tr[2]), '%d.%m.%Y %H:%M')
+                    if datetime.datetime.now() > train_time:
+                        cursor.execute('''UPDATE training SET passed = True WHERE trainid = %s''',(tr[0],))
+        time.sleep(600)
+
+
+Thread(target=passed_trains).start()
+
 
 
 def decrement_priority(trainid: int)-> int:
@@ -228,6 +247,22 @@ def look_all_trains(date: str = None) -> list:
             return trains
 
 
+def take_all_train_by_day(m: str, y: str) -> tuple:
+    with psycopg2.connect(**connect_args) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT date FROM training WHERE binded=False AND passed=False')
+            train_data = cursor.fetchall()
+            rez = []
+            if len(m) == 1:
+                m = '0' + m
+            for i in train_data:
+                k = i[0].split('.')
+                if k[2] == y and k[1] == m:
+                    if int(k[0]) not in rez:
+                        rez.append(int(k[0]))
+            return tuple(rez)
+
+
 def take_type_by_time(date: str, time: str):
     with psycopg2.connect(**connect_args) as connection:
         with connection.cursor() as cursor:
@@ -271,4 +306,5 @@ def set_dialog(phrase: str,pattern: str):
             cursor.execute('''UPDATE dialogue SET phrase = %s WHERE pattern = %s''',(phrase, pattern))
 
 if __name__ == '__main__':
-    print(take_type_by_time('04.08.2022','12:00'))
+    pass
+    print(take_all_train_by_day('8','2022'))

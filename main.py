@@ -1,8 +1,6 @@
 from create_bot import dp
 from aiogram.utils import executor
 from handlers import client, admin
-from flask_bot import app
-import asyncio
 
 
 admin.register_handlers_admin(dp)

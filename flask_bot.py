@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, redirect
-import psycopg2
-
+from flask import Flask, render_template, request, redirect, url_for
+import calendar
+from datetime import datetime
 import towar
 
 connect_args = {
@@ -13,6 +13,37 @@ connect_args = {
 
 
 app = Flask(__name__)
+calendar.setfirstweekday(firstweekday=0)
+week = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+abrs = {'Jan':'Январь',
+        'Feb':'Февраль',
+        'Mar':'Март',
+        'Apr':'Апрель',
+        'May':'Май',
+        'Jun':'Июнь',
+        'Jul':'Июль',
+        'Aug':'Август',
+        'Sep':'Сентябрь',
+        'Oct':'Октябрь',
+        'Nov':'Ноябрь',
+        'Dec':'Декабрь'
+        }
+
+
+def calc_calender(date):
+    year = date.year
+    yearInfo = dict()
+    days = calendar.monthcalendar(year, date.month)
+    month_addr = abrs.get(calendar.month_abbr[int(date.month)])
+    yearInfo[month_addr] = days
+    if date.month == 12:
+        days = calendar.monthcalendar(year+1, 1)
+        month_addr = abrs.get(calendar.month_abbr[1])
+    else:
+        days = calendar.monthcalendar(year, date.month+1)
+        month_addr = abrs.get(calendar.month_abbr[int(date.month+1)])
+    yearInfo[month_addr] = days
+    return yearInfo
 
 
 @app.route('/', methods=['post', 'get'])
@@ -45,6 +76,17 @@ def delete_user(tgid: int):
     return redirect('/about')
 
 
+@app.route('/calendar', methods=['post', 'get'])
+def calendar_page():
+    if request.method == "GET":
+        date = datetime.today()
+        this_month = abrs.get(calendar.month_abbr[date.month])
+        return render_template('calendar.html', this_month=this_month, date=date, content=calc_calender(date))
+    elif request.method == "POST":
+        print(*request.form)
+        return redirect('/')
+
+
 @app.route('/create_train',  methods=['post', 'get'])
 def create_train():
     if request.method == 'POST':
@@ -65,10 +107,15 @@ def delete_train():
     return render_template('delete_train.html',trains = towar.look_all_trains())
 
 
+# @app.route('/day_info',  methods=['post', 'get'])
+# def delete_train():
+#     return render_template('day_info.html',trains = towar.look_all_trains())
+
+
 @app.route('/delete_train/<string:date>/<string:time>')
 def delete_train_by_id(date: str, time: str):
     import telebot
-    bot = telebot.TeleBot(token='')
+    bot = telebot.TeleBot(token='5347235715:AAEHEFFLyjPoH-WNCJnhVZxJFf1PuJAcrxw')
     for i in towar.delete_trainig(date,time):
         bot.send_message(i,f'Тренировка {date} {time} была отменена')
     del bot

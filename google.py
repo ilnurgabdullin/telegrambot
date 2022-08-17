@@ -22,7 +22,8 @@ img.save("some_file.png")
 
 
 
-secret = 'MZXW633PN5XW6MZV'
+secret = 'RCY4ERTLB3IYNN23'
+
 key = ''
 while True:
 
